@@ -19,9 +19,32 @@
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Director)
         </dt>
-        <dd class="col-sm-10">
-            <a href="@Url.Action("Details", "Directors", new { id = Model.DirectorId })">@Model.Director?.Name</a>
+
+        <dd class="col-sm-10"> 
+            <a href="#" class="director-api-link" data-director-id="@Model.DirectorId">
+            @Model.Director?.Name
+            </a>
         </dd>
+
+        <script>
+            document.querySelector(".director-api-link")?.addEventListener("click", async function (event) {
+
+                event.preventDefault();
+            
+                const directorId = this.dataset.directorId
+            
+                const response = await  fetch(`/api/directors/${directorId}`);
+
+                if (!response.ok) {
+                    alert("Failed to fetch director details.");
+                    return;
+                }
+
+                const data = await response.json();
+                console.log(data);
+            });
+        </script>
+
     </dl>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.ReleaseDate)
