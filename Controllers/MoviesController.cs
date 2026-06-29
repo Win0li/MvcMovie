@@ -31,7 +31,8 @@ public class MoviesController : Controller
 
         if (!String.IsNullOrEmpty(searchString))
         {
-            movies = movies.Where(s => s.Title!.ToUpper().Contains(searchString.ToUpper()));
+            movies = movies.Where(s => s.Title!.ToUpper().Contains(searchString.ToUpper()) || s.Director.Name.ToUpper().Contains(searchString.ToUpper()));
+
         }
 
         if (!String.IsNullOrEmpty(movieGenre))
@@ -57,21 +58,37 @@ public async Task<IActionResult> Details(int? id)
             return NotFound();
         }
 
-        var movie = await _context.Movie
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (movie == null)
+        var viewModel = await _context.Movie
+            .Where(m => m.Id == id)
+            .Select(m => new MovieDetailsViewModel
+            {
+                Id = m.Id,
+                Title = m.Title,
+                ReleaseDate = m.ReleaseDate,
+                Genre = m.Genre,
+                Price = m.Price,
+                Rating = m.Rating,
+
+                DirectorName = m.Director != null ? m.Director.Name : null,
+                DirectorId = m.DirectorId,
+
+                Reviews = m.Reviews.Select(r => new ReviewSummaryViewModel
+                {
+                    Id = r.Id,
+                    RatingScore = r.RatingScore,
+                    Comment = r.Comment,
+                    ReviewerName = r.ReviewerName,
+                    CreatedAt = r.CreatedAt
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (viewModel == null)
         {
             return NotFound();
         }
-        // need to load director and reviews for the movie
 
-        // load the director for the movie
-        var director = await _context.Director.FirstOrDefaultAsync(d => d.Id == movie.DirectorId);
-        
-        // need to implement the logic to retrieve reviews for the movie and pass them to the view
-        var reviews = await _context.Review.Where(r => r.MovieId == id).ToListAsync();
-
-        return View(movie);
+        return View(viewModel);
     }
 
     // GET: MOVIES/Create
